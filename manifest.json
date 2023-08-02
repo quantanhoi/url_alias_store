@@ -3,14 +3,13 @@
     "name": "URL alias storage",
     "version": "1.0",
     "action": {
-      "default_popup": "popup.html"
+      "default_popup": "index.html"
     },
     "host_permissions": [
         "https://developer.chrome.com/*"
       ],
-    "permissions": [
-      "storage"
-    ],
+    "permissions": ["storage", "tabs"],
+    "omnibox": { "keyword" : "uas" },
     "icons": {
       "16": "images/icon-16.png",
       "32": "images/icon-32.png",
