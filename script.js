@@ -5,6 +5,7 @@ document.getElementById('alias-form').addEventListener('submit', function(event)
     if (!url || !alias) {
         return;
     }
+    //creating new row and data for table "alias-form"
     var row = document.createElement('tr');
     var aliasCell = document.createElement('td');
     var urlCell = document.createElement('td');
@@ -19,6 +20,11 @@ document.getElementById('alias-form').addEventListener('submit', function(event)
 
 function storeAlias(aliasObj) {
     // get the current state of the stored aliases
+    //aliases[] is default value, when there is no data stored
+    //under key "aliases" in result,
+    //then chrome.storage.local.get() will return {aliases: []} 
+    //and result.aliases will be an empty array
+
     chrome.storage.local.get({aliases: []}, function(result) {
         // add the new alias to the array
         result.aliases.push(aliasObj);
