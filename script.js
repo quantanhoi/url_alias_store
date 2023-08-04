@@ -9,6 +9,7 @@ document.getElementById('alias-form').addEventListener('submit', function(event)
     var row = document.createElement('tr');
     var aliasCell = document.createElement('td');
     var urlCell = document.createElement('td');
+    
     aliasCell.innerText = alias;
     urlCell.innerText = url;
     row.appendChild(aliasCell);
@@ -18,19 +19,16 @@ document.getElementById('alias-form').addEventListener('submit', function(event)
     storeAlias({ alias, url });
 });
 
+
 function storeAlias(aliasObj) {
+    chrome.storage.sync.get({aliases: []}, function(result) {
     // get the current state of the stored aliases
     //aliases[] is default value, when there is no data stored
     //under key "aliases" in result,
-    //then chrome.storage.local.get() will return {aliases: []} 
+    //then chrome.storage.sync.get() will return {aliases: []} 
     //and result.aliases will be an empty array
-
-    chrome.storage.local.get({aliases: []}, function(result) {
-        // add the new alias to the array
         result.aliases.push(aliasObj);
-
-        // save the new state back to Chrome storage
-        chrome.storage.local.set({aliases: result.aliases}, function() {
+        chrome.storage.sync.set({aliases: result.aliases}, function() {
             console.log('New alias stored.');
         });
     });
@@ -38,15 +36,23 @@ function storeAlias(aliasObj) {
 
 // Function to load stored aliases on startup
 function loadAliases() {
-    chrome.storage.local.get({aliases: []}, function(result) {
+    chrome.storage.sync.get({aliases: []}, function(result) {
         result.aliases.forEach(function(aliasObj) {
             var row = document.createElement('tr');
             var aliasCell = document.createElement('td');
             var urlCell = document.createElement('td');
+
+            // create a new cell for the checkbox
+            var removeCell = document.createElement('td');
+            var removeCheckbox = document.createElement('input');
+            removeCheckbox.type = "checkbox";
+            removeCell.appendChild(removeCheckbox);
+
             aliasCell.innerText = aliasObj.alias;
             urlCell.innerText = aliasObj.url;
             row.appendChild(aliasCell);
             row.appendChild(urlCell);
+            row.appendChild(removeCell); // append the remove cell to the row
             document.getElementById('alias-table').appendChild(row);
         });
     });
@@ -58,23 +64,61 @@ document.addEventListener('DOMContentLoaded', loadAliases);
 
 chrome.omnibox.onInputEntered.addListener((text) => {
     // text is the alias entered by the user
-
-    // Get the URL corresponding to the alias from storage
-    chrome.storage.sync.get([text], function(result) {
+    // Get the array of aliases from storage
+    chrome.storage.sync.get({aliases: []}, function(result) {
         if (chrome.runtime.lastError) {
             // Handle error
             console.log(chrome.runtime.lastError);
         } else {
-            // Check if there's a URL stored for the alias
-            if (result[text]) {
-                // If a URL is found, open it in a new tab
-                chrome.tabs.create({ url: result[text] });
+            // Find the alias object that matches the entered text
+            const aliasObj = result.aliases.find(aliasObj => aliasObj.alias === text);
+
+            if (aliasObj) {
+                // If a matching alias object is found, open its URL in a new tab
+                chrome.tabs.create({ url: aliasObj.url });
             } else {
-                // If no URL is found, you could fall back to a Google search, or show an error, etc.
+                // If no matching alias object is found, you could fall back to a Google search, or show an error, etc.
                 const newURL = 'https://www.google.com/search?q=' + encodeURIComponent(text);
                 chrome.tabs.create({ url: newURL });
             }
         }
     });
 });
+
+document.getElementById('remove-btn').addEventListener('click', function() {
+    var table = document.getElementById('alias-table');
+    var checkboxes = table.getElementsByTagName('input');
+
+    // Iterate over the checkboxes (in reverse order because we're modifying the list)
+    for (var i = checkboxes.length - 1; i >= 0; i--) {
+        var checkbox = checkboxes[i];
+        if (checkbox.checked) {
+            /*parentNode return the parent element
+            *checkbox.parentNode is the td element of table cell containing checkbox
+            *td element is nested within a 'tr' element
+            *therefore checkbox.parentNode.parentNode will return 'tr'
+            */
+            
+            var row = checkbox.parentNode.parentNode;
+
+            //getting the alias from the alias column of this row (therefore row.children[0])
+            var aliasToRemove = row.children[0].innerText;
+
+            // Remove the row from the table
+            row.parentNode.removeChild(row);
+
+            // Remove the alias from Chrome storage
+            chrome.storage.sync.get({aliases: []}, function(result) {
+                var index = result.aliases.findIndex(aliasObj => aliasObj.alias === aliasToRemove);
+                if (index > -1) {
+                    result.aliases.splice(index, 1);
+                    chrome.storage.sync.set({aliases: result.aliases}, function() {
+                        console.log('Alias removed.');
+                    });
+                }
+            });
+        }
+    }
+});
+
 

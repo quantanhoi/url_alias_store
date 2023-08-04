@@ -9,6 +9,9 @@
         "https://developer.chrome.com/*"
       ],
     "permissions": ["storage", "tabs"],
+    "background": {
+      "service_worker": "background.js"
+    },
     "omnibox": { "keyword" : "uas" },
     "icons": {
       "16": "images/icon-16.png",
