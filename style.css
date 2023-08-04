@@ -1,0 +1,34 @@
+#alias-form {
+  width: 300px;
+  margin: 5px;
+}
+
+#remove-btn {
+  background-color: rgb(201, 99, 99);
+  font: bold;
+  border-radius: 15px;
+  border: 2px solid black;
+  margin: 5px;
+  padding: 3px;
+}
+
+#alias-form input {
+  border-radius: 10px;
+  border: 2px solid black;
+  margin: 5px;
+}
+
+
+#alias-form label {
+  font-size: 20px;
+  margin: 5px;
+  
+}
+table, th, td {
+  border: 1px solid black;
+}
+th, td {
+  padding: 10px;
+}
+
+
